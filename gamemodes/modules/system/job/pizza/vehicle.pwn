@@ -91,12 +91,6 @@ stock Pizza_RentVehicle(playerid)
         return 0;
     }
 
-    if (!Job_Start(playerid, JOB_PIZZA))
-    {
-        ShowNotifyText(playerid, NOTIFY_TYPE_MODERN, "Khong the bat dau ca luc nay. Hay thu lai sau.", 4500);
-        return 0;
-    }
-
     s_PizzaRentalToken[playerid]++;
 
     new const vehicleid = CreateVehicle(
@@ -112,7 +106,7 @@ stock Pizza_RentVehicle(playerid)
 
     if (!Pizza_IsVehicleIndexValid(vehicleid) || !IsValidVehicle(vehicleid))
     {
-        Job_Stop(playerid, JOB_STOP_QUIT);
+        Pizza_DestroyRentalVehicle(playerid);
         ShowNotifyText(playerid, NOTIFY_TYPE_MODERN, "Khong the tao Pizzaboy luc nay.", 4000);
         return 0;
     }
@@ -134,7 +128,7 @@ stock Pizza_RentVehicle(playerid)
 
     if (!PutPlayerInVehicle(playerid, vehicleid, 0))
     {
-        Job_Stop(playerid, JOB_STOP_QUIT);
+        Pizza_DestroyRentalVehicle(playerid);
         ShowNotifyText(playerid, NOTIFY_TYPE_MODERN, "Khong the dua ban vao xe. Hop dong thue da huy.", 4500);
         return 0;
     }
@@ -169,8 +163,8 @@ stock Pizza_ReturnRentalVehicle(playerid)
         return 0;
     }
 
-    Job_CompleteRun(playerid, PIZZA_RETURN_BONUS, PIZZA_RETURN_XP);
-    Job_Stop(playerid, JOB_STOP_COMPLETE);
+    Pizza_Reward(playerid, PIZZA_RETURN_BONUS, PIZZA_RETURN_XP, true);
+    Pizza_DestroyRentalVehicle(playerid);
     ShowNotifyText(playerid, NOTIFY_TYPE_MODERN, "Da ban giao Pizzaboy. Thuong ket ca: $100.", 5000);
     return 1;
 }
@@ -229,14 +223,8 @@ hook OnVehicleDeath(vehicleid, killerid)
         s_PizzaRentalVehicle[playerid] == vehicleid &&
         s_PizzaRentalToken[playerid] == rentalToken)
     {
-        if (Job_IsActive(playerid, JOB_PIZZA))
-        {
-            Job_Stop(playerid, JOB_STOP_VEHICLE_LOST);
-        }
-        else
-        {
-            Pizza_DestroyRentalVehicle(playerid);
-        }
+        Pizza_DestroyRentalVehicle(playerid);
+        ShowNotifyText(playerid, NOTIFY_TYPE_MODERN, "Pizzaboy da bi pha huy. Xe va hang tam da duoc thu hoi.", 5000);
     }
     else
     {
@@ -258,21 +246,11 @@ hook OnPlayerDisconnect(playerid, reason)
     return 1;
 }
 
-hook OnPlayerJobStopping(playerid, jobid, reason)
+hook OnPlayerDeath(playerid, killerid, WEAPON:reason)
 {
-    if (jobid != JOB_PIZZA)
+    if (s_PizzaRentalVehicle[playerid] != INVALID_VEHICLE_ID)
     {
-        return 1;
-    }
-
-    Pizza_DestroyRentalVehicle(playerid);
-
-    if (reason == JOB_STOP_VEHICLE_LOST)
-    {
-        ShowNotifyText(playerid, NOTIFY_TYPE_MODERN, "Pizzaboy da bi pha huy. Xe va hang tam da duoc thu hoi.", 5000);
-    }
-    else if (reason == JOB_STOP_DEATH)
-    {
+        Pizza_DestroyRentalVehicle(playerid);
         ShowNotifyText(playerid, NOTIFY_TYPE_MODERN, "Ca Pizza da huy vi ban bat tinh. Xe va hang tam da duoc thu hoi.", 5000);
     }
     return 1;

@@ -2,6 +2,8 @@
 // Pizza job - constants, locations and runtime data
 //-----------------------------------------------------------------------------
 
+#define PIZZA_JOB_ID                         (1)
+
 #define PIZZA_DIALOG_APPLICATION             (9000)
 #define PIZZA_DIALOG_EMPLOYEE_MENU           (9001)
 #define PIZZA_DIALOG_PROFILE                 (9002)
@@ -97,14 +99,14 @@ new const g_PizzaDeliveryPoints[][E_PIZZA_DELIVERY_POINT] =
     {1442.60, -629.90, 95.72, "Mulholland"}
 };
 
-// pJob belongs to the loaded character.
-// DB source: player_characters.job / job_hired_at / job_salary / job_allowance.
+// Pizza retains its existing employment data in player_characters.
 new
-    pJob[MAX_PLAYERS],
+    bool:s_PizzaEmployee[MAX_PLAYERS],
     pJobHiredAt[MAX_PLAYERS][20],
     pJobSalary[MAX_PLAYERS],
     pJobAllowance[MAX_PLAYERS],
-    bool:pJobLoaded[MAX_PLAYERS];
+    bool:pJobLoaded[MAX_PLAYERS],
+    s_PizzaEmploymentToken[MAX_PLAYERS];
 
 new
     g_PizzaRecruiterActor = INVALID_ACTOR_ID,
@@ -130,17 +132,19 @@ new
 
 stock Pizza_ResetEmployment(playerid)
 {
-    pJob[playerid] = JOB_NONE;
+    s_PizzaEmployee[playerid] = false;
     pJobHiredAt[playerid][0] = 0;
     pJobSalary[playerid] = 0;
     pJobAllowance[playerid] = 0;
     pJobLoaded[playerid] = false;
+    s_PizzaEmploymentToken[playerid]++;
     return 1;
 }
 
 stock Pizza_InitializePlayer(playerid)
 {
     Pizza_ResetEmployment(playerid);
+    Pizza_ResetProgress(playerid);
 
     s_PizzaRentalVehicle[playerid] = INVALID_VEHICLE_ID;
     s_PizzaVehicleLabel[playerid] = Text3D:INVALID_3DTEXT_ID;
@@ -155,7 +159,7 @@ stock Pizza_InitializePlayer(playerid)
 
 stock bool:Pizza_IsEmployee(playerid)
 {
-    return pJobLoaded[playerid] && pJob[playerid] == JOB_PIZZA;
+    return pJobLoaded[playerid] && s_PizzaEmployee[playerid];
 }
 
 stock bool:Pizza_IsVehicleIndexValid(vehicleid)
@@ -194,7 +198,7 @@ stock Pizza_GetRentalVehicle(playerid)
 
 stock bool:Pizza_IsOnShift(playerid)
 {
-    return Job_IsActive(playerid, JOB_PIZZA) && Pizza_HasRentalVehicle(playerid);
+    return Pizza_HasRentalVehicle(playerid);
 }
 
 stock bool:Pizza_IsCarryingBox(playerid)

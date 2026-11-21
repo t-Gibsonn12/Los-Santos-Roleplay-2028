@@ -16,7 +16,8 @@ stock Help_ShowMain(playerid)
     strcat(body, "/try [hanh dong]\tNhap vai\tThu mot hanh dong ngau nhien\n", sizeof(body));
     strcat(body, "/roll\tNhap vai\tTung so ngau nhien 1-100\n", sizeof(body));
     strcat(body, "/thongtin\tNhan vat\tXem thong tin chi tiet\n", sizeof(body));
-    strcat(body, "/job\tNghe nghiep\tXem tien do va nghi ca\n", sizeof(body));
+    strcat(body, "/pizza [quit]\tGiao pizza\tMo menu pizza hoac dung ca\n", sizeof(body));
+    strcat(body, "/giaobanh\tGiao pizza\tNhan don giao pizza\n", sizeof(body));
     strcat(body, "/vehicles\tPhuong tien\tQuan ly xe so huu\n", sizeof(body));
     strcat(body, "/car [tuy chon]\tPhuong tien\tDieu khien dong co, den, cua kinh...\n", sizeof(body));
     strcat(body, "/admins\tQuan tri\tXem admin dang truc tuyen\n", sizeof(body));

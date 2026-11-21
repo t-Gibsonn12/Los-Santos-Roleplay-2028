@@ -4,7 +4,7 @@
 
 #include <YSI_Coding\y_hooks>
 
-forward OnPizzaCharacterJobLoaded(playerid, characterID);
+forward OnPizzaCharacterJobLoaded(playerid, characterID, loadToken);
 
 stock Pizza_LoadCharacterJob(playerid)
 {
@@ -20,30 +20,34 @@ stock Pizza_LoadCharacterJob(playerid)
     }
 
     pJobLoaded[playerid] = false;
+    s_PizzaEmploymentToken[playerid]++;
 
     new query[384];
     mysql_format(g_DatabaseHandle, query, sizeof(query), "SELECT `job`,COALESCE(DATE_FORMAT(`job_hired_at`,'%%Y-%%m-%%d %%H:%%i:%%s'),'') AS `job_hired_at`,`job_salary`,`job_allowance` FROM `player_characters` WHERE `character_id`=%d AND `account_id`=%d LIMIT 1;", characterID, GetPlayerAccountID(playerid));
-    mysql_tquery(g_DatabaseHandle, query, "OnPizzaCharacterJobLoaded", "dd", playerid, characterID);
+    mysql_tquery(g_DatabaseHandle, query, "OnPizzaCharacterJobLoaded", "ddd", playerid, characterID, s_PizzaEmploymentToken[playerid]);
     return 1;
 }
 
-public OnPizzaCharacterJobLoaded(playerid, characterID)
+public OnPizzaCharacterJobLoaded(playerid, characterID, loadToken)
 {
     if (!IsPlayerConnected(playerid) ||
         !IsPlayerCharacterLoaded(playerid) ||
-        GetPlayerCharacterID(playerid) != characterID)
+        GetPlayerCharacterID(playerid) != characterID ||
+        s_PizzaEmploymentToken[playerid] != loadToken)
     {
         return 1;
     }
 
-    pJob[playerid] = JOB_NONE;
+    s_PizzaEmployee[playerid] = false;
     pJobHiredAt[playerid][0] = 0;
     pJobSalary[playerid] = 0;
     pJobAllowance[playerid] = 0;
 
     if (cache_num_rows() > 0)
     {
-        cache_get_value_name_int(0, "job", pJob[playerid]);
+        new jobID;
+        cache_get_value_name_int(0, "job", jobID);
+        s_PizzaEmployee[playerid] = (jobID == PIZZA_JOB_ID);
         cache_get_value_name(0, "job_hired_at", pJobHiredAt[playerid], sizeof(pJobHiredAt[]));
         cache_get_value_name_int(0, "job_salary", pJobSalary[playerid]);
         cache_get_value_name_int(0, "job_allowance", pJobAllowance[playerid]);
@@ -51,13 +55,7 @@ public OnPizzaCharacterJobLoaded(playerid, characterID)
 
     pJobLoaded[playerid] = true;
 
-    // pJob decides employment immediately. Progress/history loads separately
-    // and never blocks renting a Pizzaboy.
-    if (!Job_IsProgressReady(playerid) &&
-        !s_PlayerJobProgressLoading[playerid])
-    {
-        Job_LoadProgress(playerid);
-    }
+    Pizza_LoadProgress(playerid);
 
     return 1;
 }
@@ -306,7 +304,7 @@ stock Pizza_CompleteDelivery(playerid)
     s_PizzaShiftDeliveries[playerid]++;
     DisablePlayerCheckpoint(playerid);
 
-    Job_RecordTask(playerid, PIZZA_DELIVERY_BASE_PAY, PIZZA_DELIVERY_XP, true);
+    Pizza_Reward(playerid, PIZZA_DELIVERY_BASE_PAY, PIZZA_DELIVERY_XP, false);
 
     new message[160];
     format(message, sizeof(message), "Giao banh thanh cong +$%d. Con %d/%d hop tren xe.", PIZZA_DELIVERY_BASE_PAY, s_PizzaVehicleCargo[playerid], PIZZA_MAX_CARGO);
@@ -401,7 +399,6 @@ stock Pizza_HandleYInteraction(playerid)
 hook OnGameModeInit()
 {
     Pizza_ResetVehicleRegistry();
-    Job_Register(JOB_PIZZA, "Pizza Boy");
     Pizza_CreateWorld();
     return 1;
 }
