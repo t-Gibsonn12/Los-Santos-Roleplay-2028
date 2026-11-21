@@ -86,19 +86,13 @@
 
 #include "modules/core/player/account/core.pwn"
 
-#include "modules/system/job/data.pwn"
-#include "modules/system/job/persistence.pwn"
-#include "modules/system/job/core.pwn"
-
+// Pizza delivery
 #include "modules/system/job/pizza/data.pwn"
+#include "modules/system/job/pizza/progress.pwn"
 #include "modules/system/job/pizza/vehicle.pwn"
 #include "modules/system/job/pizza/ui.pwn"
 #include "modules/system/job/pizza/core.pwn"
 #include "modules/system/job/pizza/commands.pwn"
-
-
-
-#include "modules/system/job/commands.pwn"
 
 #include "modules/system/admin/persistence.pwn"
 #include "modules/system/admin/commands.pwn"

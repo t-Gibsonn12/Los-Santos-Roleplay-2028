@@ -73,8 +73,7 @@ Xin nghi viec\tCham dut hop dong",
 stock Pizza_ShowEmployeeProfile(playerid)
 {
     new body[2048], rankName[32], vehicleStatus[64], deliveryStatus[64];
-    new const level = Job_GetLevel(playerid, JOB_PIZZA);
-    new const nextXP = Job_GetNextLevelExperience(level);
+    new const level = Pizza_GetLevel(playerid);
 
     Pizza_GetRankName(level, rankName, sizeof(rankName));
 
@@ -124,13 +123,13 @@ stock Pizza_ShowEmployeeProfile(playerid)
         pJobAllowance[playerid],
         PIZZA_MAX_KPI_BONUS,
         level,
-        MAX_JOB_LEVEL,
-        s_PlayerJobExperience[playerid][JOB_PIZZA],
-        nextXP > 0 ? "" : " (toi da)",
-        s_PlayerJobCompletedRuns[playerid][JOB_PIZZA],
-        s_PlayerJobCompletedTasks[playerid][JOB_PIZZA],
-        s_PlayerJobBestStreak[playerid][JOB_PIZZA],
-        s_PlayerJobTotalEarnings[playerid][JOB_PIZZA],
+        PIZZA_MAX_LEVEL,
+        s_PizzaExperience[playerid],
+        level < PIZZA_MAX_LEVEL ? "" : " (toi da)",
+        s_PizzaCompletedRuns[playerid],
+        s_PizzaCompletedDeliveries[playerid],
+        s_PizzaBestStreak[playerid],
+        s_PizzaTotalEarnings[playerid],
         vehicleStatus,
         deliveryStatus
     );
@@ -204,28 +203,22 @@ stock Pizza_HireEmployee(playerid)
         return 0;
     }
 
-    if (pJob[playerid] != JOB_NONE)
+    if (Pizza_IsEmployee(playerid))
     {
-        if (pJob[playerid] == JOB_PIZZA)
-        {
-            return Pizza_ShowEmployeeMenu(playerid);
-        }
-
-        ShowNotifyText(playerid, NOTIFY_TYPE_MODERN, "Nhan vat dang co mot cong viec khac. Hay nghi viec truoc.", 4500);
-        return 0;
+        return Pizza_ShowEmployeeMenu(playerid);
     }
 
     new year, month, day, hour, minute, second;
     getdate(year, month, day);
     gettime(hour, minute, second);
 
-    pJob[playerid] = JOB_PIZZA;
+    s_PizzaEmployee[playerid] = true;
     pJobSalary[playerid] = PIZZA_DAILY_SALARY;
     pJobAllowance[playerid] = PIZZA_DAILY_ALLOWANCE_TOTAL;
     format(pJobHiredAt[playerid], sizeof(pJobHiredAt[]), "%04d-%02d-%02d %02d:%02d:%02d", year, month, day, hour, minute, second);
 
     new query[512];
-    mysql_format(g_DatabaseHandle, query, sizeof(query), "UPDATE `player_characters` SET `job`=%d,`job_hired_at`=CURRENT_TIMESTAMP,`job_salary`=%d,`job_allowance`=%d WHERE `character_id`=%d AND `account_id`=%d LIMIT 1;", JOB_PIZZA, PIZZA_DAILY_SALARY, PIZZA_DAILY_ALLOWANCE_TOTAL, GetPlayerCharacterID(playerid), GetPlayerAccountID(playerid));
+    mysql_format(g_DatabaseHandle, query, sizeof(query), "UPDATE `player_characters` SET `job`=%d,`job_hired_at`=CURRENT_TIMESTAMP,`job_salary`=%d,`job_allowance`=%d WHERE `character_id`=%d AND `account_id`=%d LIMIT 1;", PIZZA_JOB_ID, PIZZA_DAILY_SALARY, PIZZA_DAILY_ALLOWANCE_TOTAL, GetPlayerCharacterID(playerid), GetPlayerAccountID(playerid));
     mysql_tquery(g_DatabaseHandle, query);
 
     ShowNotifyText(playerid, NOTIFY_TYPE_MODERN, "Ho so da duoc duyet. Chao mung ban gia nhap Pizza Stack.", 5500);
@@ -241,16 +234,12 @@ stock Pizza_ResignEmployee(playerid)
         return 0;
     }
 
-    if (Job_IsActive(playerid, JOB_PIZZA))
-    {
-        Job_Stop(playerid, JOB_STOP_QUIT);
-    }
-    else if (Pizza_HasRentalVehicle(playerid))
+    if (s_PizzaRentalVehicle[playerid] != INVALID_VEHICLE_ID)
     {
         Pizza_DestroyRentalVehicle(playerid);
     }
 
-    pJob[playerid] = JOB_NONE;
+    s_PizzaEmployee[playerid] = false;
     pJobHiredAt[playerid][0] = 0;
     pJobSalary[playerid] = 0;
     pJobAllowance[playerid] = 0;

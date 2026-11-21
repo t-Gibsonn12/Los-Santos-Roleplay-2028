@@ -21,8 +21,10 @@ compiles the gamemode before starting, and launches `omp-server.exe`.
 
 1. Import `database_structure.sql` to create the `lsrp`
    database and master-account table.
-2. Apply every file in `database/migrations` in filename order,
-   from `001` through `008`.
+2. Apply the files present in `database/migrations` in filename order.
+   Pizza uses migrations `005` and `007` to read existing employment and
+   progression data. Earlier installations can keep the columns added by
+   the retired migration `006`.
 3. Copy `mysql.ini.example` to `mysql.ini` and set the hostname, username,
    database, and `server_port`. The file must be in the server root beside
    `omp-server.exe`.
@@ -48,7 +50,7 @@ Linux open.mp package and matching `.so` plugin builds.
 
 - `gamemodes/main.pwn` — module entry point.
 - `gamemodes/modules/core/` — account, character, chat, and server core.
-- `gamemodes/modules/system/` — admin, jobs, vehicles, and help.
+- `gamemodes/modules/system/` — admin, pizza delivery, vehicles, and help.
 - `database/migrations/` — incremental schema for the game systems.
 
 ## Credits

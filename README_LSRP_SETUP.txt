@@ -25,7 +25,6 @@ CÀI ĐẶT
    003_owned_vehicles.sql
    004_admin_system.sql
    005_character_jobs.sql
-   006_job_employment.sql
    007_character_current_job.sql
    008_vehicle_fuel.sql
 5. Chạy COMPILE.bat hoặc Ctrl+Shift+B để biên dịch main.pwn bằng compiler open.mp.

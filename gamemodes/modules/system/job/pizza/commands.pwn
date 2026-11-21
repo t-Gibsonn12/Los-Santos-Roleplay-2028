@@ -10,7 +10,19 @@ CMD:giaobanh(playerid, params[])
 
 CMD:pizza(playerid, params[])
 {
-    #pragma unused params
+    if (!strcmp(params, "quit", true) || !strcmp(params, "stop", true) ||
+        !strcmp(params, "nghi", true))
+    {
+        if (!Pizza_IsOnShift(playerid))
+        {
+            SendClientMessage(playerid, COLOR_RED, "Ban khong trong ca giao pizza.");
+            return 1;
+        }
+
+        Pizza_DestroyRentalVehicle(playerid);
+        SendClientMessage(playerid, COLOR_WHITE, "Ban da ket thuc ca giao pizza.");
+        return 1;
+    }
 
     if (!pJobLoaded[playerid])
     {
